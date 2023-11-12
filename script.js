@@ -1,66 +1,101 @@
 let calendar = document.querySelector('#calendar');
 let body = calendar.querySelector('.body');
+let prev = calendar.querySelector('.prev');
+let next = calendar.querySelector('.next');
 
-let date = new Date();
-let year = date.getFullYear();
-let month = date.getMonth() + 1; // Добавляем 1, чтобы получить текущий месяц
+let date  = new Date();
+let year  = date.getFullYear();
+let month = date.getMonth();
 
-function range(count) {
-  let mas = [];
-  for (let i = 1; i <= count; i++) {
-    mas.push(i);
-  }
-  return mas;
-}
+draw(body, year, month);
 
-function getLastDay(year, month) {
-  const date = new Date(year, month, 0);
-  return date.getDate();
-}
-
-function getFirstWeekDay(year, month) {
-  const firstDayOfMonth = new Date(year, month - 1, 1); // Вычитаем 1, чтобы учесть корректные индексы месяцев
-  let firstWeekDay = firstDayOfMonth.getDay();
-  return (firstWeekDay + 6) % 7; // Исправляем для правильного начала с понедельника
-}
-
-function getLastWeekDay(year, month) {
-  const lastDayOfMonth = new Date(year, month, 0);
-  let lastWeekDay = lastDayOfMonth.getDay();
-  return (lastWeekDay + 6) % 7; // Исправляем для правильного начала с понедельника
-}
-
-function normalize(arr, left, right) {
-  const normalizedArray = [...Array(left).fill(""), ...arr, ...Array(right).fill("")];
-  return normalizedArray;
-}
-
-function chunk(arr, n) {
-  const result = [];
-  for (let i = 0; i < arr.length; i += n) {
-    result.push(arr.slice(i, i + n));
-  }
-  return result;
+function draw(body, year, month) {
+	let arr = range(getLastDay(year, month));
+	
+	let firstWeekDay = getFirstWeekDay(year, month);
+	let lastWeekDay  = getLastWeekDay(year, month);
+	
+	let nums = chunk(normalize(arr, firstWeekDay, 6 - lastWeekDay), 7);
+	createTable(body, nums)
 }
 
 function createTable(parent, arr) {
-  for (let i = 0; i < arr.length; i++) {
-    let row = parent.insertRow();
-    for (let j = 0; j < arr[i].length; j++) {
-      let cell = row.insertCell();
-      cell.textContent = arr[i][j] || ""; // Добавляем проверку на пустые ячейки
-      if (arr[i][j] === date.getDate() && month === date.getMonth() + 1 && year === date.getFullYear()) {
-        cell.classList.add("today"); // Выделение ячейки для текущей даты
-      }
-    }
-  }
+	parent.textContent = '';
+	let cells = [];
+	
+	for (let sub of arr) {
+		let tr = document.createElement('tr');
+		
+		for (let num of sub) {
+			let td = document.createElement('td');
+			td.textContent = num;
+			tr.appendChild(td);
+			
+			cells.push(td);
+		}
+		
+		parent.appendChild(tr);
+	}
+	
+	return cells;
 }
 
-let arr = range(getLastDay(year, month));
-let firstWeekDay = getFirstWeekDay(year, month);
-let lastWeekDay = getLastWeekDay(year, month);
+function normalize(arr, left, right) {
+	for (let i = 0; i < left; i++) {
+		arr.unshift('');
+	}
+	for (var i = 0; i < right; i++) {
+		arr.push('');
+	}
+	
+	return arr;
+}
 
-let nums = chunk(normalize(arr, firstWeekDay, 6 - lastWeekDay), 7);
-let tableBody = document.querySelector('.body');
+function getFirstWeekDay(year, month) {
+	let date = new Date(year, month, 1);
+	let num  = date.getDay();
+	
+	if (num == 0) {
+		return 6;
+	} else {
+		return num - 1;
+	}
+}
 
-createTable(tableBody, nums);
+function getLastWeekDay(year, month) {
+	let date = new Date(year, month + 1, 0);
+	let num  = date.getDay();
+	
+	if (num == 0) {
+		return 6;
+	} else {
+		return num - 1;
+	}
+}
+
+function getLastDay(year, month) {
+	let date = new Date(year, month + 1, 0);
+	return date.getDate();
+}
+
+function range(count) {
+	let arr = [];
+	
+	for (let i = 1; i <= count; i++) {
+		arr.push(i);
+	}
+	
+	return arr;
+}
+
+function chunk(arr, n) {
+	let result = [];
+	let count = Math.ceil(arr.length / n);
+	
+	for (let i = 0; i < count; i++) {
+		let elems = arr.splice(0, n);
+		result.push(elems);
+	}
+	
+	return result;
+}
